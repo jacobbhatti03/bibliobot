@@ -3,6 +3,17 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
+from auth import require_google_login
+
+user = require_google_login()
+
+# Optional: show who is logged in
+with st.sidebar:
+    st.write(f"Signed in as: **{user.email}**")
+    if st.button("Logout"):
+        st.logout()
+        st.stop()
+
 
 # ----------------------------
 # Load environment variables
@@ -108,4 +119,5 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
