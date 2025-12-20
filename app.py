@@ -12,6 +12,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
+
 # ----------------------------
 # Session state
 # ----------------------------
@@ -26,6 +27,15 @@ if "user_name" not in st.session_state:
 
 if "first_question_pending" not in st.session_state:
     st.session_state.first_question_pending = True
+
+def require_google_login():
+    """Require a logged-in Google user before showing the app."""
+    if not getattr(st, "user", None) or not st.user.is_logged_in:
+        st.info("Please sign in with Google to use BiblioBot.")
+        st.login("google")  # Starts OIDC login
+        st.stop()
+
+    return st.user
 
 # ----------------------------
 # Gemini API call
@@ -98,3 +108,4 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
