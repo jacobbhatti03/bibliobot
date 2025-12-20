@@ -6,6 +6,16 @@ import google.generativeai as genai
 from src.auth import sidebar_login_ui, get_user
 from src.ui import header
 
+st.set_page_config(page_title="BiblioBot", layout="wide")
+
+header()
+sidebar_login_ui()
+
+# Skeleton mode: auth disabled, get_user() returns None for now
+user = get_user()
+
+st.info("Skeleton ready ✅ Use the pages on the left (Chat / Documents / Settings).")
+
 user = require_google_login()
 
 # Optional: show who is logged in
@@ -120,6 +130,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
