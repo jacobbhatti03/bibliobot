@@ -3,7 +3,8 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
-from auth import require_google_login
+from src.auth import sidebar_login_ui, get_user
+from src.ui import header
 
 user = require_google_login()
 
@@ -119,5 +120,6 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
