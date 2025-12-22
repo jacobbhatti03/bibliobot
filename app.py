@@ -3,28 +3,19 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import google.generativeai as genai
-from src.auth import sidebar_login_ui, get_user
+import time
 from src.ui import header
+from src.auth import sidebar_login_ui, get_user
+
+
 
 st.set_page_config(page_title="BiblioBot", layout="wide")
 
 header()
 sidebar_login_ui()
+user = get_user()  # None for now
 
-# Skeleton mode: auth disabled, get_user() returns None for now
-user = get_user()
-
-st.info("Skeleton ready ✅ Use the pages on the left (Chat / Documents / Settings).")
-
-user = require_google_login()
-
-# Optional: show who is logged in
-with st.sidebar:
-    st.write(f"Signed in as: **{user.email}**")
-    if st.button("Logout"):
-        st.logout()
-        st.stop()
-
+st.caption("Use the sidebar to navigate between pages.")
 
 # ----------------------------
 # Load environment variables
@@ -34,9 +25,12 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
+# ----------------------------
+# Page Config (Custom Name + Icon)
+# ----------------------------
 
 # ----------------------------
-# Session state
+# Session State
 # ----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -47,79 +41,148 @@ if "chat_session" not in st.session_state:
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 
-if "first_question_pending" not in st.session_state:
-    st.session_state.first_question_pending = True
+if "awaiting_reply" not in st.session_state:
+    st.session_state.awaiting_reply = False
 
-def require_google_login():
-    """Require a logged-in Google user before showing the app."""
-    if not getattr(st, "user", None) or not st.user.is_logged_in:
-        st.info("Please sign in with Google to use BiblioBot.")
-        st.login("google")  # Starts OIDC login
-        st.stop()
+if "current_input" not in st.session_state:
+    st.session_state.current_input = ""
 
-    return st.user
 
 # ----------------------------
-# Gemini API call
+# Gemini API Call
 # ----------------------------
 def ask_gemini_api(prompt: str, user_name: str) -> str:
     try:
         persona_instruction = (
             f"You are a Christian faithful girl named BIBLIOBOT. "
-            f"Address the user by their name: {user_name}. "
+            f"Address the user by their name: {user_name or 'Friend'}. "
             "Only answer biblical questions in Roman Urdu + English. "
             "Always reference the Bible and be kind. "
             "Do NOT include Islamic or extra-biblical content."
         )
+
         st.session_state.chat_session.send_message(persona_instruction)
         response = st.session_state.chat_session.send_message(prompt)
-        return getattr(response, "text", str(response))  # plain text only
+        return getattr(response, "text", str(response))
     except Exception as e:
         return f"Error: {str(e)}"
 
+
 # ----------------------------
-# UI
+# CSS Styling
 # ----------------------------
-st.markdown("<h1 style='text-align:center; font-size:56px;'>BIBLIOBOT</h1>", unsafe_allow_html=True)
 st.markdown("""
 <style>
-.chat-box {min-height:300px; max-height:520px; overflow-y:auto; padding:14px; border:1px solid #ddd; border-radius:12px; background-color:#f7f7f8;}
-.message-bubble {padding:10px 14px; border-radius:18px; max-width:70%; clear:both; box-shadow:0 1px 2px rgba(0,0,0,0.12); word-wrap: break-word; white-space: pre-wrap;}
-.user { float:right; margin:6px 0 6px auto; background-color:#111111; color:white; }
-.bot { float:left; margin:6px auto 6px 0; background-color:white; color:black; }
-.timestamp { font-size:10px; color:gray; float:right; margin-left:8px; }
+.chat-box {
+    min-height: 350px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background-color: #f7f7f8;
+}
+.message-bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    max-width: 70%;
+    clear: both;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+.user { float: right; margin: 6px 0 6px auto; background-color: #111; color: white; }
+.bot { float: left; margin: 6px auto 6px 0; background-color: white; color: black; }
+.timestamp { font-size: 10px; color: gray; float: right; margin-left: 8px; }
+
+/* Typing animation */
+.typing {
+    float: left;
+    margin: 6px auto 6px 0;
+    background-color: white;
+    color: gray;
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-style: italic;
+}
+.typing span {
+    display: inline-block;
+    animation: blink 1.5s infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    20% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
 </style>
 """, unsafe_allow_html=True)
 
-chat_container = st.empty()
-user_input = st.text_input("", placeholder="Type your Biblical question here...", key="input_box")
 
 # ----------------------------
-# Handle user input
+# Chat Renderer
 # ----------------------------
-if user_input.strip():
+def render_chat(typing=False):
+    chat_html = ""
+    for msg in st.session_state.messages:
+        cls = "message-bubble user" if msg["type"] == "right" else "message-bubble bot"
+        chat_html += f'<div class="{cls}">{msg["content"]}<br><span class="timestamp">{msg["time"]}</span></div>'
+    if typing:
+        chat_html += '<div class="typing">BiblioBot is typing<span>.</span><span>.</span><span>.</span></div>'
+    chat_html += "<div style='clear:both;'></div>"
+    chat_container.markdown(f'<div class="chat-box">{chat_html}</div>', unsafe_allow_html=True)
+
+
+# ----------------------------
+# Send Message Logic
+# ----------------------------
+def send_message():
+    user_input = st.session_state.current_input.strip()
+    if not user_input or st.session_state.awaiting_reply:
+        return
+
     now = datetime.now().strftime("%I:%M %p")
     st.session_state.messages.append({"type": "right", "content": user_input, "time": now})
+    st.session_state.awaiting_reply = True
+    render_chat(typing=True)
 
-    if st.session_state.first_question_pending:
-        # ask for name (no "Beta") + answer first question
-        st.session_state.user_name = user_input
+    # Fetch reply
+    with st.spinner("Thinking..."):
         reply = ask_gemini_api(user_input, st.session_state.user_name)
-        st.session_state.messages.append({"type": "left", "content": reply, "time": now})
-        st.session_state.first_question_pending = False
-    else:
-        reply = ask_gemini_api(user_input, st.session_state.user_name)
-        st.session_state.messages.append({"type": "left", "content": reply, "time": now})
+        time.sleep(0.4)  # small natural delay
+
+    st.session_state.messages.append({"type": "left", "content": reply, "time": datetime.now().strftime("%I:%M %p")})
+    st.session_state.awaiting_reply = False
+    st.session_state.current_input = ""  # clear text box safely
+
 
 # ----------------------------
-# Render messages (plain text only)
+# UI Header
 # ----------------------------
-chat_html = ""
-for msg in st.session_state.messages:
-    cls = "message-bubble user" if msg["type"]=="right" else "message-bubble bot"
-    chat_html += f'<div class="{cls}">{msg["content"]}<br><span class="timestamp">{msg["time"]}</span></div>'
-chat_html += "<div style='clear:both;'></div>"
-chat_container.markdown(f'<div class="chat-box">{chat_html}</div>', unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; font-size:56px;'>BIBLIOBOT</h1>", unsafe_allow_html=True)
+chat_container = st.empty()
+
+# ----------------------------
+# Input Field + Button
+# ----------------------------
+col1, col2 = st.columns([7, 1])
+with col1:
+    st.text_input(
+        "",
+        placeholder="Type your Biblical question here...",
+        key="current_input",
+        on_change=send_message,
+        label_visibility="collapsed"
+    )
+with col2:
+    st.button("Send", use_container_width=True, on_click=send_message)
+
+# ----------------------------
+# Render Chat
+# ----------------------------
+render_chat(typing=st.session_state.awaiting_reply)
 
 # ----------------------------
 # Auto-scroll
@@ -130,7 +193,6 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
-
 
 
 
