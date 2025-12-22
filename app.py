@@ -4,25 +4,58 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 import time
+import streamlit as st
 from src.ui import header
-from src.auth import sidebar_login_ui, get_user
+from src.auth import sidebar_login_ui, require_google_login
+from src.storage import init_chat, add, clear
+from src.llm import reply
+from src.safety import is_allowed, refusal_message
 
+st.set_page_config(page_title="BiblioBot", layout="wide")
 
-user_id = getattr(user, "email", None) if user else None
+# Header
+header()
+
+# Sidebar login UI
+sidebar_login_ui()
+
+# ✅ FIRST: enforce login and get user
+user = require_google_login()
+
+# ✅ THEN: derive user_id
+user_id = getattr(user, "email", None)
+
+# ---------------- CHAT UI ----------------
+with st.sidebar:
+    st.divider()
+    if st.button("Clear chat"):
+        clear(user_id)
+        st.rerun()
+
+st.subheader("Chat")
 
 init_chat(user_id)
 
-for m in get(user_id):
+for m in st.session_state.get(f"messages_{user_id}", []):
     with st.chat_message(m["role"]):
         st.write(m["content"])
 
-add("user", prompt, user_id)
-add("assistant", response, user_id)
+prompt = st.chat_input("Ask a Bible-related question...")
 
+if prompt:
+    add("user", prompt, user_id)
+    with st.chat_message("user"):
+        st.write(prompt)
 
-header()
-sidebar_login_ui()
-user = get_user()  # None for now
+    if not is_allowed(prompt):
+        response = refusal_message()
+    else:
+        response = reply(prompt)
+
+    add("assistant", response, user_id)
+    with st.chat_message("assistant"):
+        st.write(response)
+
 
 
 # ----------------------------
@@ -201,6 +234,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
