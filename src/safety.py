@@ -14,15 +14,26 @@ OUT_OF_SCOPE = [
 def is_allowed(question: str) -> bool:
     q = question.lower().strip()
 
-    # Block obvious non-bible content
     if any(word in q for word in OUT_OF_SCOPE):
         return False
 
-    # Allow if bible-related keywords OR verse pattern (e.g., John 3:16)
     if any(word in q for word in BIBLE_KEYWORDS):
         return True
 
+    # verse pattern like 3:16
     if re.search(r"\b\d{1,3}:\d{1,3}\b", q):
         return True
 
     return False
+
+
+def refusal_message() -> str:
+    return (
+        "🙏 **BiblioBot stays scripture-focused**\n\n"
+        "I can only help with Bible/scripture-based questions.\n\n"
+        "**Try asking:**\n"
+        "- Explain John 3:16\n"
+        "- What does Romans 8 teach?\n"
+        "- Give Bible verses about anxiety\n"
+        "- Summarize Psalm 23"
+    )
