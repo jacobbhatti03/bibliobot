@@ -16,6 +16,10 @@ for m in get(user_id):
     with st.chat_message(m["role"]):
         st.write(m["content"])
 
+add("user", prompt, user_id)
+add("assistant", response, user_id)
+
+
 header()
 sidebar_login_ui()
 user = get_user()  # None for now
@@ -197,6 +201,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
