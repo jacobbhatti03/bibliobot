@@ -7,15 +7,12 @@ import time
 from src.ui import header
 from src.auth import sidebar_login_ui, get_user
 
-
-
 st.set_page_config(page_title="BiblioBot", layout="wide")
 
 header()
 sidebar_login_ui()
 user = get_user()  # None for now
 
-st.caption("Use the sidebar to navigate between pages.")
 
 # ----------------------------
 # Load environment variables
@@ -193,6 +190,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
