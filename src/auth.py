@@ -6,7 +6,7 @@ def require_google_login():
     """
     if not getattr(st, "user", None) or not st.user.is_logged_in:
         st.info("Please sign in with Google to continue.")
-        st.login(google)  # uses provider config from secrets.toml
+        st.login("google")  # uses provider config from secrets.toml
         st.stop()
 
     return st.user
@@ -21,4 +21,5 @@ def sidebar_login_ui():
                 st.stop()
         else:
             st.caption("Not signed in")
+
 
