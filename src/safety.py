@@ -9,12 +9,12 @@ BIBLE_KEYWORDS = {
 }
 
 VERSE_PATTERNS = [
-    r"\b\d{1,3}:\d{1,3}(-\d{1,3})?\b",          # 3:16, 1:1-3
-    r"\bpsalm\s*\d+\b",                         # Psalm 23
-    r"\b(1|2|3)\s*(john|peter|timothy|cor)\b",  # 1 John, 2 Peter, 1 Cor
+    r"\b\d{1,3}:\d{1,3}(-\d{1,3})?\b",
+    r"\bpsalm\s*\d+\b",
+    r"\b(1|2|3)\s*(john|peter|timothy|cor)\b",
 ]
 
-HARD_BLOCK = {"hack","crack","pirate","porn","explicit"}  # keep short
+HARD_BLOCK = {"hack","crack","pirate","porn","explicit"}
 
 def is_scripture_related(text: str) -> bool:
     t = text.lower().strip()
@@ -25,15 +25,15 @@ def is_scripture_related(text: str) -> bool:
     return any(re.search(p, t) for p in VERSE_PATTERNS)
 
 def gentle_redirect(user_question: str) -> str:
-    # Not “you’re wrong” — just a friendly boundary + offer alternatives
     return (
-        "I can help best with **Bible, scripture, and apologetics** questions.\n\n"
+        "I can help best with **Bible, scripture, and apologetics**.\n\n"
         "If you want, I can:\n"
         "• connect your question to a **biblical perspective**\n"
-        "• share **relevant verses** and a short explanation\n"
-        "• help you form an **apologetics-style answer**\n\n"
+        "• share **relevant verses** with a short explanation\n"
+        "• help you build an **apologetics-style answer**\n\n"
         "Try asking like:\n"
-        f"• “What does the Bible say about {user_question[:60]}?”\n"
+        f"• “What does the Bible say about {user_question[:60]}…?”\n"
         "• “Give verses + explanation about this topic.”"
     )
+
 
