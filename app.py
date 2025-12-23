@@ -1,6 +1,4 @@
 import streamlit as st
-import os
-import google.generativeai as genai
 from src.ui import header
 from src.auth import sidebar_login_ui, require_google_login
 from src.storage import init_chat, add, get, clear
@@ -8,7 +6,11 @@ from src.llm import reply
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
 
-st.set_page_config(page_title="BiblioBot", layout="wide")
+st.set_page_config(
+    page_title="BiblioBot",
+    page_icon="assets/icon.png",
+    layout="wide"
+)
 
 # Header + auth UI
 header()
@@ -76,14 +78,6 @@ User question: {prompt}
     add("assistant", response, user_id)
     with st.chat_message("assistant"):
         st.write(response)
-
-
-# ----------------------------
-# Load environment variables
-# ----------------------------
-
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
 
 # ----------------------------
 # Page Config (Custom Name + Icon)
@@ -270,6 +264,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
