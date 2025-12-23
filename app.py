@@ -10,6 +10,13 @@ from src.auth import sidebar_login_ui, require_google_login
 from src.storage import init_chat, add, clear
 from src.llm import reply
 from src.safety import is_allowed, refusal_message
+from src.safety import is_scripture_related, gentle_redirect
+
+if not is_scripture_related(prompt):
+    response = gentle_redirect(prompt)
+else:
+    response = reply(prompt)
+
 
 st.set_page_config(page_title="BiblioBot", layout="wide")
 
@@ -234,11 +241,3 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
