@@ -11,6 +11,8 @@ from src.storage import init_chat, add, clear
 from src.llm import reply
 from src.safety import is_allowed, refusal_message
 from src.safety import is_scripture_related, gentle_redirect
+from src.notes import add_note, format_notes_for_prompt
+
 
 if not is_scripture_related(prompt):
     response = gentle_redirect(prompt)
@@ -38,6 +40,19 @@ with st.sidebar:
     if st.button("Clear chat"):
         clear(user_id)
         st.rerun()
+
+st.divider()
+st.subheader("Scripture Notes (learn)")
+
+note_title = st.text_input("Title", placeholder="e.g., Romans 8 – Hope")
+note_text = st.text_area("Write your scripture-based note", height=100)
+
+if st.button("Save note"):
+    if note_text.strip():
+        add_note(user_id, note_title, note_text)
+        st.success("Saved ✅")
+    else:
+        st.warning("Write something first.")
 
 st.subheader("Chat")
 
@@ -94,6 +109,22 @@ if "awaiting_reply" not in st.session_state:
 
 if "current_input" not in st.session_state:
     st.session_state.current_input = ""
+if not is_scripture_related(prompt):
+    response = gentle_redirect(prompt)
+else:
+    notes_context = format_notes_for_prompt(user_id)
+
+    full_prompt = f"""
+You are BiblioBot: a Bible + apologetics assistant.
+Tone: gentle, respectful, non-judgmental.
+Stay scripture-grounded. If the user asks off-topic, invite them to reframe biblically.
+User notes may contain mistakes; verify with scripture and correct gently.
+
+{notes_context}
+
+User question: {prompt}
+"""
+    response = reply(full_prompt)
 
 
 # ----------------------------
@@ -102,11 +133,12 @@ if "current_input" not in st.session_state:
 def ask_gemini_api(prompt: str, user_name: str) -> str:
     try:
         persona_instruction = (
-            f"You are a Christian faithful girl named BIBLIOBOT. "
+            f"You are a Christian faithful person named BIBLIOBOT. "
             f"Address the user by their name: {user_name or 'Friend'}. "
             "Only answer biblical questions in Roman Urdu + English. "
             "Always reference the Bible and be kind. "
             "Do NOT include Islamic or extra-biblical content."
+            "If someone asks which religion is better , Islam or Christianity . say I dont have any personal opinion"
         )
 
         st.session_state.chat_session.send_message(persona_instruction)
@@ -241,3 +273,4 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
