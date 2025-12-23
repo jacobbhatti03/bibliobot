@@ -1,82 +1,80 @@
 import streamlit as st
-from datetime import datetime
-import os
-from dotenv import load_dotenv
-import google.generativeai as genai
-import time
-import streamlit as st
+
 from src.ui import header
 from src.auth import sidebar_login_ui, require_google_login
-from src.storage import init_chat, add, clear
+from src.storage import init_chat, add, get, clear
 from src.llm import reply
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
 
-
-if not is_scripture_related(prompt):
-    response = gentle_redirect(prompt)
-else:
-    response = reply(prompt)
-
-
 st.set_page_config(page_title="BiblioBot", layout="wide")
 
-# Header
+# Header + auth UI
 header()
-
-# Sidebar login UI
 sidebar_login_ui()
 
-# ✅ FIRST: enforce login and get user
+# Enforce login first
 user = require_google_login()
+user_id = user.email  # stable enough for now
 
-# ✅ THEN: derive user_id
-user_id = getattr(user, "email", None)
-
-# ---------------- CHAT UI ----------------
+# Sidebar controls + notes (keep inside sidebar)
 with st.sidebar:
     st.divider()
     if st.button("Clear chat"):
         clear(user_id)
         st.rerun()
 
-st.divider()
-st.subheader("Scripture Notes (learn)")
+    st.divider()
+    st.subheader("Scripture Notes (learn)")
+    note_title = st.text_input("Title", placeholder="e.g., Romans 8 – Hope")
+    note_text = st.text_area("Write your scripture-based note", height=100)
 
-note_title = st.text_input("Title", placeholder="e.g., Romans 8 – Hope")
-note_text = st.text_area("Write your scripture-based note", height=100)
+    if st.button("Save note"):
+        if note_text.strip():
+            add_note(user_id, note_title, note_text)
+            st.success("Saved ✅")
+        else:
+            st.warning("Write something first.")
 
-if st.button("Save note"):
-    if note_text.strip():
-        add_note(user_id, note_title, note_text)
-        st.success("Saved ✅")
-    else:
-        st.warning("Write something first.")
-
+# -------- Chat UI --------
 st.subheader("Chat")
 
 init_chat(user_id)
 
-for m in st.session_state.get(f"messages_{user_id}", []):
+# Show history
+for m in get(user_id):
     with st.chat_message(m["role"]):
         st.write(m["content"])
 
-prompt = st.chat_input("Ask a Bible-related question...")
+# Input (prompt is defined here)
+prompt = st.chat_input("Ask a Bible / apologetics question...")
 
+# Process only when user sends
 if prompt:
     add("user", prompt, user_id)
     with st.chat_message("user"):
         st.write(prompt)
 
-    if not is_allowed(prompt):
-        response = refusal_message()
+    if not is_scripture_related(prompt):
+        response = gentle_redirect(prompt)
     else:
-        response = reply(prompt)
+        notes_context = format_notes_for_prompt(user_id)
+
+        full_prompt = f"""
+You are BiblioBot: a Bible + apologetics assistant.
+Tone: gentle, respectful, non-judgmental.
+Stay scripture-grounded. If the user is mistaken, correct kindly using scripture.
+User notes may contain mistakes; verify with scripture and correct gently.
+
+{notes_context}
+
+User question: {prompt}
+"""
+        response = reply(full_prompt)
 
     add("assistant", response, user_id)
     with st.chat_message("assistant"):
         st.write(response)
-
 
 
 # ----------------------------
@@ -272,5 +270,6 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
