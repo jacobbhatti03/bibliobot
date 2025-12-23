@@ -86,11 +86,7 @@ User question: {prompt}
 # ----------------------------
 # Session State
 # ----------------------------
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
-if "chat_session" not in st.session_state:
-    st.session_state.chat_session = model.start_chat(history=[])
 
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
@@ -100,6 +96,7 @@ if "awaiting_reply" not in st.session_state:
 
 if "current_input" not in st.session_state:
     st.session_state.current_input = ""
+    
 if not is_scripture_related(prompt):
     response = gentle_redirect(prompt)
 else:
@@ -264,6 +261,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
