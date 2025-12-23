@@ -9,7 +9,6 @@ from src.ui import header
 from src.auth import sidebar_login_ui, require_google_login
 from src.storage import init_chat, add, clear
 from src.llm import reply
-from src.safety import is_allowed, refusal_message
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
 
@@ -273,4 +272,5 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
