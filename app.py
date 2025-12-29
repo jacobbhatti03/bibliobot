@@ -30,6 +30,7 @@ def send_message(text):
         "content": text,
         "time": now
     })
+    time.sleep(0.4)
 
 # Header + auth UI
 header()
@@ -281,6 +282,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
