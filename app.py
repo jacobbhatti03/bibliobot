@@ -22,7 +22,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.write("datetime exists:", "datetime" in globals())
+st.write("DEBUG time:", time)
 def send_message(text):
     now = datetime.now().strftime("%I:%M %p")
     st.session_state.messages.append({
@@ -282,6 +282,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
