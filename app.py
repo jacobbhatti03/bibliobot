@@ -6,6 +6,13 @@ from src.llm import reply
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
 
+# ---------------- SESSION STATE INIT ----------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "awaiting_reply" not in st.session_state:
+    st.session_state.awaiting_reply = False
+    
 st.set_page_config(
     page_title="BiblioBot",
     page_icon="assets/icon.png",
@@ -38,12 +45,7 @@ with st.sidebar:
             st.success("Saved ✅")
         else:
             st.warning("Write something first.")
-# ---------------- SESSION STATE INIT ----------------
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
-if "awaiting_reply" not in st.session_state:
-    st.session_state.awaiting_reply = False
 
 # -------- Chat UI --------
 st.subheader("Chat")
@@ -267,6 +269,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
