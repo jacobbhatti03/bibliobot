@@ -5,6 +5,7 @@ from src.storage import init_chat, add, get, clear
 from src.llm import reply
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
+from datetime import datetime
 
 # ---------------- SESSION STATE INIT ----------------
 if "messages" not in st.session_state:
@@ -269,6 +270,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
