@@ -38,6 +38,12 @@ with st.sidebar:
             st.success("Saved ✅")
         else:
             st.warning("Write something first.")
+# ---------------- SESSION STATE INIT ----------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "awaiting_reply" not in st.session_state:
+    st.session_state.awaiting_reply = False
 
 # -------- Chat UI --------
 st.subheader("Chat")
@@ -261,6 +267,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
