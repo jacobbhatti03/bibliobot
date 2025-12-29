@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from datetime import datetime
+import os
 from src.ui import header
 from src.auth import sidebar_login_ui, require_google_login
 from src.storage import init_chat, add, get, clear
@@ -280,6 +281,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
