@@ -1,11 +1,11 @@
 import streamlit as st
+from datetime import datetime
 from src.ui import header
 from src.auth import sidebar_login_ui, require_google_login
 from src.storage import init_chat, add, get, clear
 from src.llm import reply
 from src.safety import is_scripture_related, gentle_redirect
 from src.notes import add_note, format_notes_for_prompt
-from datetime import datetime
 
 # ---------------- SESSION STATE INIT ----------------
 if "messages" not in st.session_state:
@@ -19,6 +19,15 @@ st.set_page_config(
     page_icon="assets/icon.png",
     layout="wide"
 )
+
+st.write("datetime exists:", "datetime" in globals())
+def send_message(text):
+    now = datetime.now().strftime("%I:%M %p")
+    st.session_state.messages.append({
+        "role": "user",
+        "content": text,
+        "time": now
+    })
 
 # Header + auth UI
 header()
@@ -270,6 +279,7 @@ var chatBox = document.querySelector('.chat-box');
 if(chatBox){ chatBox.scrollTop = chatBox.scrollHeight; }
 </script>
 """, unsafe_allow_html=True)
+
 
 
 
